@@ -8,7 +8,7 @@ import redis
 import plotly.graph_objects as plotly_go
 
 import locale
-locale.setlocale(locale.LC_ALL, "en_US.utf8")
+locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
 class tickergram:
     def __init__(self, tg_token, redis_host, redis_port, redis_db, password="", allow_commands=[]):
@@ -267,10 +267,13 @@ class tickergram:
             ty_info = ty.info
         except:
             return None
-        if "shortName" not in ty_info.keys() or not ty_info.get("regularMarketPrice"):
+        if "shortName" not in ty_info.keys():
             return None
         ret_data["company_name"] = ty_info["shortName"]
-        ret_data["latest_price"] = round(ty_info["regularMarketPrice"], 2)
+        if "currentPrice" in ty_info.keys():
+            ret_data["latest_price"] = round(ty_info["currentPrice"], 2)
+        elif "regularMarketDayHigh" in ty_info.keys():
+            ret_data["latest_price"] = round(ty_info["regularMarketDayHigh"], 2)
         ret_data["previous_close"] = round(ty_info["previousClose"], 2)
         ret_data["52w_high"] = round(ty_info["fiftyTwoWeekHigh"], 2)
         ret_data["52w_low"] = round(ty_info["fiftyTwoWeekLow"], 2)
@@ -473,7 +476,6 @@ class tickergram:
         text_msg += "/watchlistnotify toggle the automatic watchlist notifications on and off\n"
         text_msg += "/overview get an overview of global markets\n"
         text_msg += "/feargreed get picture of CNN's Fear & Greed Index\n\n"
-        text_msg += u"_Powered by [Tickergram](https://github.com/a0rtega/tickergram-bot)_"
         self.tg_send_msg_post(text_msg, chat["id"])
 
     def bot_cmd_auth(self, chat, text, msg_from):
